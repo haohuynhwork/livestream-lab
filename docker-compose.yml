@@ -1,0 +1,41 @@
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_DB: livestream
+    ports: ["5442:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+
+  valkey:
+    image: valkey/valkey:8
+    ports: ["6390:6379"]
+
+  seaweedfs:
+    image: chrislusf/seaweedfs:latest
+    command: server -s3 -s3.config=/etc/seaweedfs/s3.json -dir=/data
+    ports: ["8333:8333", "9333:9333"]
+    volumes:
+      - seaweed:/data
+      - ./infra/seaweedfs-s3.json:/etc/seaweedfs/s3.json:ro
+
+  livekit:
+    image: livekit/livekit-server:latest
+    command: --config /etc/livekit.yaml
+    ports: ["7880:7880", "7881:7881", "7882:7882/udp"]
+    volumes: [./infra/livekit.yaml:/etc/livekit.yaml:ro]
+    depends_on: [valkey]
+
+  livekit-egress:
+    image: livekit/egress:latest
+    environment:
+      EGRESS_CONFIG_FILE: /etc/egress.yaml
+    volumes: [./infra/egress.yaml:/etc/egress.yaml:ro]
+    cap_add: [SYS_ADMIN]
+    depends_on: [livekit, valkey]
+    network_mode: host
+
+volumes:
+  pgdata:
+  seaweed:

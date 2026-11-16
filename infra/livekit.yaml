@@ -3,9 +3,15 @@ rtc:
   tcp_port: 7881
   udp_port: 7882
   use_external_ip: false
+  # lets browsers on this machine reach the container's media ports
+  node_ip: 127.0.0.1
 redis:
   address: valkey:6379
 keys:
   devkey: devsecret_change_me_at_least_32_chars_long
+webhook:
+  api_key: devkey
+  urls:
+    - http://host.docker.internal:3000/api/livekit/webhook
 turn:
   enabled: false

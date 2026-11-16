@@ -9,3 +9,5 @@ s3:
   endpoint: http://localhost:8333
   bucket: recordings
   force_path_style: true
+# headless Chrome renders room composites from LiveKit's hosted template
+log_level: info

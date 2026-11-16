@@ -10,12 +10,28 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthedRouteImport } from './routes/_authed'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as AuthedGoLiveRouteImport } from './routes/_authed/go-live'
+import { Route as AuthedMessagesRouteImport } from './routes/_authed/messages'
+import { Route as AuthedRecordingsRouteImport } from './routes/_authed/recordings'
+import { Route as LiveStreamIdRouteImport } from './routes/live.$streamId'
+import { Route as AuthedCallCallIdRouteImport } from './routes/_authed/call.$callId'
+import { Route as AuthedMessagesIndexRouteImport } from './routes/_authed/messages.index'
+import { Route as AuthedMessagesConversationIdRouteImport } from './routes/_authed/messages.$conversationId'
+import { Route as ApiAttachmentsIndexRouteImport } from './routes/api/attachments/index'
+import { Route as ApiAttachmentsAttachmentIdRouteImport } from './routes/api/attachments/$attachmentId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as ApiLivekitWebhookRouteImport } from './routes/api/livekit/webhook'
+import { Route as ApiRecordingsRecordingIdRouteImport } from './routes/api/recordings/$recordingId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthedRoute = AuthedRouteImport.update({
+  id: '/_authed',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -23,40 +39,180 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthedGoLiveRoute = AuthedGoLiveRouteImport.update({
+  id: '/go-live',
+  path: '/go-live',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedMessagesRoute = AuthedMessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedRecordingsRoute = AuthedRecordingsRouteImport.update({
+  id: '/recordings',
+  path: '/recordings',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const LiveStreamIdRoute = LiveStreamIdRouteImport.update({
+  id: '/live/$streamId',
+  path: '/live/$streamId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthedCallCallIdRoute = AuthedCallCallIdRouteImport.update({
+  id: '/call/$callId',
+  path: '/call/$callId',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedMessagesIndexRoute = AuthedMessagesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthedMessagesRoute,
+} as any)
+const AuthedMessagesConversationIdRoute =
+  AuthedMessagesConversationIdRouteImport.update({
+    id: '/$conversationId',
+    path: '/$conversationId',
+    getParentRoute: () => AuthedMessagesRoute,
+  } as any)
+const ApiAttachmentsIndexRoute = ApiAttachmentsIndexRouteImport.update({
+  id: '/api/attachments/',
+  path: '/api/attachments/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAttachmentsAttachmentIdRoute =
+  ApiAttachmentsAttachmentIdRouteImport.update({
+    id: '/api/attachments/$attachmentId',
+    path: '/api/attachments/$attachmentId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiLivekitWebhookRoute = ApiLivekitWebhookRouteImport.update({
+  id: '/api/livekit/webhook',
+  path: '/api/livekit/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiRecordingsRecordingIdRoute =
+  ApiRecordingsRecordingIdRouteImport.update({
+    id: '/api/recordings/$recordingId',
+    path: '/api/recordings/$recordingId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/go-live': typeof AuthedGoLiveRoute
+  '/messages': typeof AuthedMessagesRouteWithChildren
+  '/recordings': typeof AuthedRecordingsRoute
+  '/live/$streamId': typeof LiveStreamIdRoute
+  '/call/$callId': typeof AuthedCallCallIdRoute
+  '/messages/$conversationId': typeof AuthedMessagesConversationIdRoute
+  '/api/attachments/$attachmentId': typeof ApiAttachmentsAttachmentIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/livekit/webhook': typeof ApiLivekitWebhookRoute
+  '/api/recordings/$recordingId': typeof ApiRecordingsRecordingIdRoute
+  '/messages/': typeof AuthedMessagesIndexRoute
+  '/api/attachments/': typeof ApiAttachmentsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/go-live': typeof AuthedGoLiveRoute
+  '/recordings': typeof AuthedRecordingsRoute
+  '/live/$streamId': typeof LiveStreamIdRoute
+  '/call/$callId': typeof AuthedCallCallIdRoute
+  '/messages/$conversationId': typeof AuthedMessagesConversationIdRoute
+  '/api/attachments/$attachmentId': typeof ApiAttachmentsAttachmentIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/livekit/webhook': typeof ApiLivekitWebhookRoute
+  '/api/recordings/$recordingId': typeof ApiRecordingsRecordingIdRoute
+  '/messages': typeof AuthedMessagesIndexRoute
+  '/api/attachments': typeof ApiAttachmentsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authed': typeof AuthedRouteWithChildren
   '/login': typeof LoginRoute
+  '/_authed/go-live': typeof AuthedGoLiveRoute
+  '/_authed/messages': typeof AuthedMessagesRouteWithChildren
+  '/_authed/recordings': typeof AuthedRecordingsRoute
+  '/live/$streamId': typeof LiveStreamIdRoute
+  '/_authed/call/$callId': typeof AuthedCallCallIdRoute
+  '/_authed/messages/$conversationId': typeof AuthedMessagesConversationIdRoute
+  '/api/attachments/$attachmentId': typeof ApiAttachmentsAttachmentIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/livekit/webhook': typeof ApiLivekitWebhookRoute
+  '/api/recordings/$recordingId': typeof ApiRecordingsRecordingIdRoute
+  '/_authed/messages/': typeof AuthedMessagesIndexRoute
+  '/api/attachments/': typeof ApiAttachmentsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/api/auth/$'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/go-live'
+    | '/messages'
+    | '/recordings'
+    | '/live/$streamId'
+    | '/call/$callId'
+    | '/messages/$conversationId'
+    | '/api/attachments/$attachmentId'
+    | '/api/auth/$'
+    | '/api/livekit/webhook'
+    | '/api/recordings/$recordingId'
+    | '/messages/'
+    | '/api/attachments/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/api/auth/$'
-  id: '__root__' | '/' | '/login' | '/api/auth/$'
+  to:
+    | '/'
+    | '/login'
+    | '/go-live'
+    | '/recordings'
+    | '/live/$streamId'
+    | '/call/$callId'
+    | '/messages/$conversationId'
+    | '/api/attachments/$attachmentId'
+    | '/api/auth/$'
+    | '/api/livekit/webhook'
+    | '/api/recordings/$recordingId'
+    | '/messages'
+    | '/api/attachments'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authed'
+    | '/login'
+    | '/_authed/go-live'
+    | '/_authed/messages'
+    | '/_authed/recordings'
+    | '/live/$streamId'
+    | '/_authed/call/$callId'
+    | '/_authed/messages/$conversationId'
+    | '/api/attachments/$attachmentId'
+    | '/api/auth/$'
+    | '/api/livekit/webhook'
+    | '/api/recordings/$recordingId'
+    | '/_authed/messages/'
+    | '/api/attachments/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthedRoute: typeof AuthedRouteWithChildren
   LoginRoute: typeof LoginRoute
+  LiveStreamIdRoute: typeof LiveStreamIdRoute
+  ApiAttachmentsAttachmentIdRoute: typeof ApiAttachmentsAttachmentIdRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiLivekitWebhookRoute: typeof ApiLivekitWebhookRoute
+  ApiRecordingsRecordingIdRoute: typeof ApiRecordingsRecordingIdRoute
+  ApiAttachmentsIndexRoute: typeof ApiAttachmentsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -68,11 +224,81 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authed': {
+      id: '/_authed'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authed/go-live': {
+      id: '/_authed/go-live'
+      path: '/go-live'
+      fullPath: '/go-live'
+      preLoaderRoute: typeof AuthedGoLiveRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/messages': {
+      id: '/_authed/messages'
+      path: '/messages'
+      fullPath: '/messages'
+      preLoaderRoute: typeof AuthedMessagesRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/recordings': {
+      id: '/_authed/recordings'
+      path: '/recordings'
+      fullPath: '/recordings'
+      preLoaderRoute: typeof AuthedRecordingsRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/live/$streamId': {
+      id: '/live/$streamId'
+      path: '/live/$streamId'
+      fullPath: '/live/$streamId'
+      preLoaderRoute: typeof LiveStreamIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authed/call/$callId': {
+      id: '/_authed/call/$callId'
+      path: '/call/$callId'
+      fullPath: '/call/$callId'
+      preLoaderRoute: typeof AuthedCallCallIdRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/messages/': {
+      id: '/_authed/messages/'
+      path: '/'
+      fullPath: '/messages/'
+      preLoaderRoute: typeof AuthedMessagesIndexRouteImport
+      parentRoute: typeof AuthedMessagesRoute
+    }
+    '/_authed/messages/$conversationId': {
+      id: '/_authed/messages/$conversationId'
+      path: '/$conversationId'
+      fullPath: '/messages/$conversationId'
+      preLoaderRoute: typeof AuthedMessagesConversationIdRouteImport
+      parentRoute: typeof AuthedMessagesRoute
+    }
+    '/api/attachments/': {
+      id: '/api/attachments/'
+      path: '/api/attachments'
+      fullPath: '/api/attachments/'
+      preLoaderRoute: typeof ApiAttachmentsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/attachments/$attachmentId': {
+      id: '/api/attachments/$attachmentId'
+      path: '/api/attachments/$attachmentId'
+      fullPath: '/api/attachments/$attachmentId'
+      preLoaderRoute: typeof ApiAttachmentsAttachmentIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/auth/$': {
@@ -82,13 +308,64 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/livekit/webhook': {
+      id: '/api/livekit/webhook'
+      path: '/api/livekit/webhook'
+      fullPath: '/api/livekit/webhook'
+      preLoaderRoute: typeof ApiLivekitWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/recordings/$recordingId': {
+      id: '/api/recordings/$recordingId'
+      path: '/api/recordings/$recordingId'
+      fullPath: '/api/recordings/$recordingId'
+      preLoaderRoute: typeof ApiRecordingsRecordingIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
+interface AuthedMessagesRouteChildren {
+  AuthedMessagesConversationIdRoute: typeof AuthedMessagesConversationIdRoute
+  AuthedMessagesIndexRoute: typeof AuthedMessagesIndexRoute
+}
+
+const AuthedMessagesRouteChildren: AuthedMessagesRouteChildren = {
+  AuthedMessagesConversationIdRoute: AuthedMessagesConversationIdRoute,
+  AuthedMessagesIndexRoute: AuthedMessagesIndexRoute,
+}
+
+const AuthedMessagesRouteWithChildren = AuthedMessagesRoute._addFileChildren(
+  AuthedMessagesRouteChildren,
+)
+
+interface AuthedRouteChildren {
+  AuthedGoLiveRoute: typeof AuthedGoLiveRoute
+  AuthedMessagesRoute: typeof AuthedMessagesRouteWithChildren
+  AuthedRecordingsRoute: typeof AuthedRecordingsRoute
+  AuthedCallCallIdRoute: typeof AuthedCallCallIdRoute
+}
+
+const AuthedRouteChildren: AuthedRouteChildren = {
+  AuthedGoLiveRoute: AuthedGoLiveRoute,
+  AuthedMessagesRoute: AuthedMessagesRouteWithChildren,
+  AuthedRecordingsRoute: AuthedRecordingsRoute,
+  AuthedCallCallIdRoute: AuthedCallCallIdRoute,
+}
+
+const AuthedRouteWithChildren =
+  AuthedRoute._addFileChildren(AuthedRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthedRoute: AuthedRouteWithChildren,
   LoginRoute: LoginRoute,
+  LiveStreamIdRoute: LiveStreamIdRoute,
+  ApiAttachmentsAttachmentIdRoute: ApiAttachmentsAttachmentIdRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiLivekitWebhookRoute: ApiLivekitWebhookRoute,
+  ApiRecordingsRecordingIdRoute: ApiRecordingsRecordingIdRoute,
+  ApiAttachmentsIndexRoute: ApiAttachmentsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

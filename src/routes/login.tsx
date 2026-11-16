@@ -1,16 +1,22 @@
 import { useState } from 'react'
 import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
+import { z } from 'zod'
 import { signIn, signUp } from '~/lib/auth-client'
 
+// only allow same-origin relative redirects
+const safeRedirect = (r?: string) => (r && r.startsWith('/') && !r.startsWith('//') ? r : '/')
+
 export const Route = createFileRoute('/login')({
-  beforeLoad: ({ context }) => {
-    if (context.session) throw redirect({ to: '/' })
+  validateSearch: z.object({ redirect: z.string().optional() }),
+  beforeLoad: ({ context, search }) => {
+    if (context.session) throw redirect({ href: safeRedirect(search.redirect) })
   },
   component: Login,
 })
 
 function Login() {
   const router = useRouter()
+  const search = Route.useSearch()
   const [mode, setMode] = useState<'signin' | 'signup'>('signin')
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
@@ -29,10 +35,11 @@ function Login() {
     setPending(false)
     if (res.error) return setError(res.error.message ?? 'Something went wrong')
     await router.invalidate()
-    await router.navigate({ to: '/' })
+    await router.navigate({ href: safeRedirect(search.redirect) })
   }
 
   return (
+    <main className="narrow">
     <div className="card">
       <h1>{mode === 'signin' ? 'Sign in' : 'Create account'}</h1>
       <form onSubmit={onSubmit}>
@@ -44,7 +51,7 @@ function Login() {
         <button
           type="button"
           className="secondary"
-          onClick={() => signIn.social({ provider: 'github', callbackURL: '/' })}
+          onClick={() => signIn.social({ provider: 'github', callbackURL: safeRedirect(search.redirect) })}
         >
           Continue with GitHub
         </button>
@@ -53,5 +60,6 @@ function Login() {
         </button>
       </form>
     </div>
+    </main>
   )
 }

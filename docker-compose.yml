@@ -14,7 +14,7 @@ services:
 
   seaweedfs:
     image: chrislusf/seaweedfs:latest
-    command: server -s3 -s3.config=/etc/seaweedfs/s3.json -dir=/data
+    command: server -s3 -s3.config=/etc/seaweedfs/s3.json -dir=/data -volume.max=50 -volume.minFreeSpace=200MiB -master.volumeSizeLimitMB=64
     ports: ["8333:8333", "9333:9333"]
     volumes:
       - seaweed:/data
@@ -25,6 +25,7 @@ services:
     command: --config /etc/livekit.yaml
     ports: ["7880:7880", "7881:7881", "7882:7882/udp"]
     volumes: [./infra/livekit.yaml:/etc/livekit.yaml:ro]
+    extra_hosts: ["host.docker.internal:host-gateway"]
     depends_on: [valkey]
 
   livekit-egress:

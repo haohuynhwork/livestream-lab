@@ -8,6 +8,13 @@
       "when": 1794859556482,
       "tag": "0000_mighty_emma_frost",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794883830783,
+      "tag": "0001_naive_bulldozer",
+      "breakpoints": true
     }
   ]
 }

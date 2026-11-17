@@ -5,6 +5,7 @@ import { db, schema } from '~/db'
 import { authMiddleware } from '~/lib/middleware'
 import { channels, onlineUserIds, publish, publishToUsers } from '~/lib/valkey'
 import { sendPush } from '~/lib/push'
+import { fetchGiphy } from './giphy'
 import { HttpError, assertCanAccess, hydrateMessages, memberIds, toUserSummary } from './access'
 
 const { conversations, conversationMembers, messages, attachments, user } = schema
@@ -47,6 +48,7 @@ export const listConversations = createServerFn({ method: 'GET' })
       db
         .selectDistinctOn([messages.conversationId], {
           conversationId: messages.conversationId,
+          kind: messages.kind,
           body: messages.body,
           deletedAt: messages.deletedAt,
         })
@@ -77,7 +79,7 @@ export const listConversations = createServerFn({ method: 'GET' })
         kind: c.kind,
         title: c.title ?? (others.map((o) => o.name).join(', ') || 'Just you'),
         lastMessageAt: c.lastMessageAt?.toISOString() ?? null,
-        lastMessagePreview: lm ? (lm.deletedAt ? 'Message deleted' : (lm.body ?? '📎 Attachment')) : null,
+        lastMessagePreview: lm ? (lm.deletedAt ? 'Message deleted' : (lm.body ?? (lm.kind === 'text' ? '📎 Attachment' : lm.kind === 'gif' ? 'GIF' : 'Sticker'))) : null,
         unread: unread.get(c.id) ?? 0,
         members: ms,
       }
@@ -189,8 +191,11 @@ export const sendMessage = createServerFn({ method: 'POST' })
         conversationId: z.uuid(),
         body: z.string().trim().max(4000).optional(),
         attachmentIds: z.array(z.uuid()).max(10).default([]),
+        // GIFs and stickers are sent on their own, without text or attachments
+        media: z.object({ kind: z.enum(['gif', 'sticker']), id: z.string().regex(/^\w{1,64}$/) }).optional(),
       })
-      .refine((d) => d.body || d.attachmentIds.length, 'Message is empty'),
+      .refine((d) => d.body || d.attachmentIds.length || d.media, 'Message is empty')
+      .refine((d) => !d.media || (!d.body && !d.attachmentIds.length), 'GIFs and stickers are sent alone'),
   )
   .handler(async ({ data, context }) => {
     const me = context.user
@@ -199,10 +204,19 @@ export const sendMessage = createServerFn({ method: 'POST' })
       throw new HttpError(400, 'Attachments are not allowed in stream chat')
     }
 
+    // resolve the GIF server-side so clients can't inject arbitrary image URLs
+    const payload = data.media ? await fetchGiphy(data.media.id) : null
+
     const row = await db.transaction(async (tx) => {
       const [msg] = await tx
         .insert(messages)
-        .values({ conversationId: data.conversationId, senderId: me.id, body: data.body || null })
+        .values({
+          conversationId: data.conversationId,
+          senderId: me.id,
+          kind: data.media?.kind ?? 'text',
+          body: data.body || null,
+          payload,
+        })
         .returning()
       if (data.attachmentIds.length) {
         const linked = await tx
@@ -240,7 +254,7 @@ export const sendMessage = createServerFn({ method: 'POST' })
         others.filter((id) => !online.has(id)),
         {
           title: me.name,
-          body: data.body?.slice(0, 120) || '📎 Sent an attachment',
+          body: data.body?.slice(0, 120) || (data.media ? `Sent a ${data.media.kind}` : '📎 Sent an attachment'),
           url: `/messages/${data.conversationId}`,
           tag: `conv-${data.conversationId}`,
         },

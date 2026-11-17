@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { AttachmentDTO, MessageDTO, UserSummary } from '~/lib/events'
+import type { AttachmentDTO, MediaPayload, MessageDTO, UserSummary } from '~/lib/events'
 import { useConversationChannel, useRealtimeEvent } from '~/lib/realtime-client'
+import { MediaPicker } from './MediaPicker'
 import { deleteMessage, getMessages, markRead, sendMessage } from '~/server/messaging'
 
 type Props = {
@@ -50,7 +51,7 @@ export function Chat({ conversationId, meId, variant, canModerate, readState }: 
       })
     } else if (e.t === 'message.deleted' && e.conversationId === conversationId) {
       setMessages((prev) =>
-        prev.map((m) => (m.id === e.messageId ? { ...m, deleted: true, body: null, attachments: [] } : m)),
+        prev.map((m) => (m.id === e.messageId ? { ...m, deleted: true, body: null, media: null, attachments: [] } : m)),
       )
     } else if (e.t === 'typing' && e.conversationId === conversationId) {
       setTyping((prev) => new Map(prev).set(e.user.id, { user: e.user, until: Date.now() + 4000 }))
@@ -174,7 +175,9 @@ function MessageRow(props: {
   const { message: m, mine, compact } = props
   const time = new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   return (
-    <div className={`msg ${mine && !compact ? 'mine' : ''} ${compact ? 'compact' : ''}`}>
+    <div
+      className={`msg ${mine && !compact ? 'mine' : ''} ${compact ? 'compact' : ''} ${m.kind === 'sticker' && !m.deleted ? 'sticker' : ''}`}
+    >
       <div className="msg-bubble">
         {(compact || !mine) && <strong className="msg-sender">{m.sender?.name ?? 'Deleted user'}</strong>}
         {m.deleted ? (
@@ -182,6 +185,16 @@ function MessageRow(props: {
         ) : (
           <>
             {m.body && <span className="msg-body">{m.body}</span>}
+            {m.media && (
+              <img
+                className={m.kind === 'sticker' ? 'msg-sticker' : 'msg-gif'}
+                src={m.media.url}
+                alt={m.media.title}
+                width={m.media.width}
+                height={m.media.height}
+                loading="lazy"
+              />
+            )}
             {m.attachments.map((a) => (
               <Attachment key={a.id} a={a} />
             ))}
@@ -239,7 +252,35 @@ function Composer(props: {
   const [uploading, setUploading] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [sending, setSending] = useState(false)
+  const [pickerOpen, setPickerOpen] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
+  const closePicker = useCallback(() => setPickerOpen(false), [])
+
+  function insertEmoji(emoji: string) {
+    const el = inputRef.current
+    const start = el?.selectionStart ?? body.length
+    const end = el?.selectionEnd ?? body.length
+    setBody(body.slice(0, start) + emoji + body.slice(end))
+    requestAnimationFrame(() => {
+      el?.focus()
+      el?.setSelectionRange(start + emoji.length, start + emoji.length)
+    })
+  }
+
+  async function sendMedia(kind: 'gif' | 'sticker', m: MediaPayload) {
+    if (sending) return
+    setPickerOpen(false)
+    setSending(true)
+    setError(null)
+    try {
+      props.onSent(await sendMessage({ data: { conversationId: props.conversationId, media: { kind, id: m.id } } }))
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setSending(false)
+    }
+  }
 
   const upload = useCallback(
     async (files: FileList | File[]) => {
@@ -307,7 +348,11 @@ function Composer(props: {
         </div>
       )}
       {error && <p className="error small">{error}</p>}
+      {pickerOpen && <MediaPicker onEmoji={insertEmoji} onMedia={sendMedia} onClose={closePicker} />}
       <div className="composer-row">
+        <button data-picker-toggle className="secondary icon" title="Emoji, GIFs & stickers" onClick={() => setPickerOpen((o) => !o)}>
+          😊
+        </button>
         {props.allowAttachments && (
           <>
             <button className="secondary icon" title="Attach files" onClick={() => fileRef.current?.click()}>
@@ -326,6 +371,7 @@ function Composer(props: {
           </>
         )}
         <textarea
+          ref={inputRef}
           rows={1}
           value={body}
           placeholder="Message"

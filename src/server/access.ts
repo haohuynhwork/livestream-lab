@@ -75,7 +75,9 @@ export async function hydrateMessages(rows: (typeof messages.$inferSelect)[]): P
     return {
       id: r.id,
       conversationId: r.conversationId,
+      kind: r.kind,
       body: deleted ? null : r.body,
+      media: deleted ? null : r.payload,
       createdAt: r.createdAt.toISOString(),
       deleted,
       sender: s ? toUserSummary(s) : null,

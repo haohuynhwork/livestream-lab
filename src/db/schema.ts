@@ -10,6 +10,7 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core'
+import type { MediaPayload } from '~/lib/events'
 
 const timestamps = {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -141,6 +142,8 @@ export const conversationMembers = pgTable(
   ],
 )
 
+export const messageKind = pgEnum('message_kind', ['text', 'gif', 'sticker'])
+
 export const messages = pgTable(
   'messages',
   {
@@ -149,7 +152,10 @@ export const messages = pgTable(
       .notNull()
       .references(() => conversations.id, { onDelete: 'cascade' }),
     senderId: text('sender_id').references(() => user.id, { onDelete: 'set null' }),
+    kind: messageKind('kind').notNull().default('text'),
     body: text('body'),
+    // GIF / sticker metadata for non-text kinds (see MediaPayload in ~/lib/events)
+    payload: jsonb('payload').$type<MediaPayload>(),
     replyToId: uuid('reply_to_id'),
     editedAt: timestamp('edited_at', { withTimezone: true }),
     deletedAt: timestamp('deleted_at', { withTimezone: true }),

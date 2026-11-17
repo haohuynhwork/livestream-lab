@@ -10,10 +10,21 @@ export type AttachmentDTO = {
   url: string
 }
 
+export type MediaPayload = {
+  provider: 'giphy'
+  id: string
+  title: string
+  url: string
+  width: number
+  height: number
+}
+
 export type MessageDTO = {
   id: string
   conversationId: string
+  kind: 'text' | 'gif' | 'sticker'
   body: string | null
+  media: MediaPayload | null
   createdAt: string
   deleted: boolean
   sender: UserSummary | null
